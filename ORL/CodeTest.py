@@ -114,7 +114,7 @@ def move(S,a,V):
     chaos = NewChaos()
     v = np.zeros([V.shape[0], V.shape[1]])
     for i in range(0,V.shape[0]):
-        v[i] = chaos*V[i]+a[i]
+        v[i] = chaos*V[i]+a[i]#added the accleration matrix
         chaos = 4*chaos*(1-chaos)
         if chaos == 0.0 or chaos == 0.25 or chaos == 0.5 or chaos == 0.75 or chaos == 1.0:
             chaos = NewChaos()
