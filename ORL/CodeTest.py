@@ -185,6 +185,7 @@ def checkAgents(fitness,threshold):
     activ = []
     ac=0
     pv=0
+    #hypothesis here is the fitness value
     for i in range(0,N):
         if fitness[i]>=threshold:
             activ[ac] = S[i]
