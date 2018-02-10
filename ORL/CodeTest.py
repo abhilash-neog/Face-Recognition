@@ -11,6 +11,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 import FaceRecognition
 import random
+from time import time
 
 faces_db = fetch_olivetti_faces()
 print("Data Loaded")
@@ -180,34 +181,64 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.xticks(())
         plt.yticks(())
         
-def checkAgents(fitness,threshold):
-    passiv = []
-    activ = []
-    ac=0
-    pv=0
+def checkAgents(displacement,threshold):
+    passiv = np.zeros([N,dim])
+    activ = np.zeros([N,dim])
+    a=0
+    p=0
+    count=0
     for i in range(0,N):
-        if fitness[i]>=threshold:
-            activ[ac] = S[i]
-            ac+=1
+        for k in range(0,len(displacement[0])):
+            if np.greater(threshold,displacement[i][k]):
+                count+=1
+        if count==len(displacement[0]):
+            activ[a]=S[i]
+            a+=1
         else:
-            passiv[pv] = S[i]
-            pv+=1
+            passiv[p]=S[i]
+            p+=1
+            
     return passiv,activ
-def diffusion(passiv_agents,activ_agents):
+
+def diffusion(passiv_agents,activ_agents,fitness):
+    active_index = 0
     for i in range(0,len(activ_agents)):
         ran = random.choice(S)
-        if ran in activ_agents:
-            continue
-        else:
-            ind = S.index(ran)
-            fitness[ind] = fitness[i] 
+        for k in range(0,len(activ_agents)):
+            if np.array_equal(ran,activ_agents[k]):
+                continue
+            else:
+                for m in range(0,len(S)):
+                    if np.array_equal(S[m],activ_agents[i]):
+                        active_index = m
+                        break
+                    
+                for i in range(0,len(S)):
+                    if np.array_equal(S[i],ran):    
+                        fitness[i] = fitness[active_index]
+                        break
     return fitness
-        
+
+def thresholdValue(iter,threshold):
+    threshold = threshold + np.log10(i)
+    return threshold
+
+def calcDisplacement(S,old_S):
+    displ = S-old_S
+    return displ    
+
 FBest = LBest = best = bestArg = 0.0
 BestChart = np.zeros([MaxIt,1])
 fitness = Evaluate(weight_matrix, S)
+old_S = S
+"""Displacement for the first iteration"""
 M = MassCalc(fitness)
-for i in range(0,MaxIt):
+G = Gconstant(0,MaxIt)
+a = GField(G, M, S, 0, MaxIt, 1)
+S, V = move(S, a, V)
+M = MassCalc(fitness)
+t1=time()
+for i in range(1,MaxIt):
     print("Iteration : %d" % i)
     S = Sbound(S, up, low)
     fitness = Evaluate(weight_matrix, S)
@@ -225,9 +256,13 @@ for i in range(0,MaxIt):
     """fitness of every point > certain threshold-active agent
         fitness of a point < certain threshold-passive agent"""
     ######selection of agents######
-    threshold = (least+FBest)/2
-    passive_agents,active_agents = checkAgents(fitness,threshold)
-    fitness = diffusion(passive_agents,active_agents)
+    if i==0:
+        threshold = np.average(old_S)
+    else:
+        threshold = thresholdValue(i,threshold)
+    displacement = calcDisplacement(S,old_S)
+    passive_agents,active_agents = checkAgents(displacement,threshold)
+    fitness = diffusion(passive_agents,active_agents,fitness)
     ###############################
     leastArg = np.argmin(fitness)
     least = np.min(fitness)#finding the least on the updated list
@@ -244,10 +279,13 @@ for i in range(0,MaxIt):
         S[leastArg] = eigen_local_best
         eigen_faces_lowd[leastArg] = eigen_local_best
         print("Eigen vector replaced")
+    old_S = S
     M = MassCalc(fitness)
     G = Gconstant(i,MaxIt)
     a = GField(G, M, S, i, MaxIt, 1)
     S, V = move(S, a, V)
+t2 = time()
+print("time required:",round(t2-t1,3))
 eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
 pca.components_ = eigen_faces_transformed
 X_train_pca = pca.transform(X_train)
