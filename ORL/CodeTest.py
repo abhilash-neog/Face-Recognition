@@ -115,7 +115,7 @@ def move(S,a,V):
     chaos = NewChaos()
     v = np.zeros([V.shape[0], V.shape[1]])
     for i in range(0,V.shape[0]):
-        v[i] = chaos*V[i]+a[i]
+        v[i] = chaos*V[i]+a[i]#added the accleration matrix
         chaos = 4*chaos*(1-chaos)
         if chaos == 0.0 or chaos == 0.25 or chaos == 0.5 or chaos == 0.75 or chaos == 1.0:
             chaos = NewChaos()
@@ -181,12 +181,21 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.xticks(())
         plt.yticks(())
         
+<<<<<<< HEAD
 def checkAgents(displacement,threshold):
     passiv = np.zeros([N,dim])
     activ = np.zeros([N,dim])
     a=0
     p=0
     count=0
+=======
+def checkAgents(fitness,threshold):
+    passiv = []
+    activ = []
+    ac=0
+    pv=0
+    #hypothesis here is the fitness value
+>>>>>>> ceb74dfa00ad815c4a3a96ede13ffc66f9bd7140
     for i in range(0,N):
         for k in range(0,len(displacement[0])):
             if np.greater(threshold,displacement[i][k]):
