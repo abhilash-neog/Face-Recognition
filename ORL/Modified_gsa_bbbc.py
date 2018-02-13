@@ -183,42 +183,40 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.yticks(())
         
 def checkAgents(displacement,threshold):
-    passiv = np.zeros([N,dim])
-    activ = np.zeros([N,dim])
-    a=0
-    p=0
-    count=0
+    passiv = []#np.zeros([N,dim])
+    activ = []#np.zeros([N,dim])
+    
     #hypothesis here is the fitness value
     for i in range(0,N):
-        for k in range(0,len(displacement[0])):
+        """for k in range(0,len(displacement[0])):
             if np.greater(threshold,displacement[i][k]):
-                count+=1
-        if count==len(displacement[0]):
+                count+=1"""
+        """if count==len(displacement[0]):
             activ[a]=S[i]
-            a+=1
+            a+=1"""
+        if np.greater(threshold,np.average(displacement[i])):
+            activ.append(i)
         else:
-            passiv[p]=S[i]
-            p+=1
+            passiv.append(i)
             
     return passiv,activ
 
 def diffusion(passiv_agents,activ_agents,fitness):
-    active_index = 0
+    found = 0
     for i in range(0,len(activ_agents)):
-        ran = random.choice(S)
-        for k in range(0,len(activ_agents)):
-            if np.array_equal(ran,activ_agents[k]):
-                continue
-            else:
-                for m in range(0,len(S)):
-                    if np.array_equal(S[m],activ_agents[i]):
-                        active_index = m
-                        break
-                    
-                for i in range(0,len(S)):
-                    if np.array_equal(S[i],ran):    
-                        fitness[i] = fitness[active_index]
-                        break
+        ran = random.randint(0,151)#
+        """for k in range(0,len(activ_agents)):
+            if ran==activ_agents[k]:
+                found = 1
+                break
+        if found==1:
+        	found = 0
+            continue"""
+        if ran in activ_agents:
+        	continue
+        else:
+            fitness[ran] = fitness[i]
+                
     return fitness
 
 def thresholdValue(iter,threshold):
@@ -259,6 +257,7 @@ for i in range(1,MaxIt):
         threshold = np.average(old_S)
     else:
         threshold = thresholdValue(i,threshold)
+        
     displacement = calcDisplacement(S,old_S)
     passive_agents,active_agents = checkAgents(displacement,threshold)
     fitness = diffusion(passive_agents,active_agents,fitness)
