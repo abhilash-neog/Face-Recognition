@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------------------------
-Hybrid GSA-BBBC Algorithm using Chaotic Local Search & It's Application to a Face Recognition Scenario
+Hybrid GSA-SDS-BBBC Algorithm using Chaotic Local Search & It's Application to a Face Recognition Scenario
 ------------------------------------------------------------------------------------------------------
 
 Programming Language Used: Python
@@ -36,6 +36,12 @@ Functions: (i)   CostFun                ->  The ojective function used to evalua
 	   (x)   plot_gallery		->  plots the eigen faces obtained
 						inputs : eigen face vectors, titles, height, width
 						outputs: eigen vectors figure
+	   (xi) checkAgents		-> checks whether an agent is active or passive and accordingly classifies them
+	   					inputs : 
+						outputs :
+	   (xii) diffusion		-> Causes the diffusion of hypothesis by the active diffusion process
+	   					inputs :
+						outputs :
 Description: 
 	The code automatically fetches the dataset by connecting to the internet. Number of components is given as 150 (can be changed as per the programmer's wish).
 Prinicple Component Analysis is done on the dataset and eigen vectors are extracted. Then dimensionality reduction is done on the eigen vectors to match the number of
