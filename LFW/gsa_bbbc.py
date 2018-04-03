@@ -10,6 +10,11 @@ from sklearn import svm, datasets
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+import FaceRecognition
+from time import time
+import random
+#from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
 
 faces_db = fetch_lfw_people(min_faces_per_person= 40, resize=0.4)
 print("Data Loaded")
@@ -21,10 +26,11 @@ y = label_binarize(y, classes=[0, 1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
 n_classes = y.shape[1]#21 y.shape[0] returns 1867 the no of rows
 target_names = faces_db.target_names
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-no_of_components = 150
+no_of_components = 380
 print("Extracting the top %d eigenfaces from %d faces" % (no_of_components, X_train.shape[0]))
-pca = PCA(n_components=no_of_components, whiten=True).fit(X_train)#n_components == min(n_samples, n_features)
+pca = PCA(n_components=no_of_components,svd_solver='randomized', whiten=True).fit(X_train)#n_components == min(n_samples, n_features)
 eigen_faces = pca.components_ 
+print(sum(pca.explained_variance_ratio_))
 no_eigen_faces,no_features = eigen_faces.shape#150,1850
 eigen_faces_lowd = pca.transform(eigen_faces)#dimensionality reduction applied
 #eigen_faces_lowd = eigen_faces.dot(eigen_faces.transpose())
@@ -45,7 +51,7 @@ dim = eigen_faces_lowd.shape[1]
 V = np.zeros([N,dim])
 S = np.zeros([N,dim])
 np.copyto(S,eigen_faces_lowd)#copies content of src into dst array
-MaxIt = int(S.shape[0]/3)#                                               WHy?????
+MaxIt = 30#int(S.shape[0]/3)#                                               WHy?????
 print("Maximum Iterations : %d" % MaxIt)#50
 #limit = max(abs(np.amin(S)), abs(np.amax(S)))
 up = np.amax(S)#max along an axis flattened
@@ -128,7 +134,7 @@ def ChaoticLocalSearch(weight_matrix, centre):
     r = minvalue
     L = np.zeros([dim,dim])
     chaosM = np.zeros([dim,1])
-    rho = 0.6 # what's ds???????????
+    #rho = 0.6 
     for i in range(0,dim):
         L[i] = centre
         chaosM[i] = NewChaos()
@@ -160,10 +166,63 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.title(titles[i], size=12)
         plt.xticks(())
         plt.yticks(())
+        
+def thresholdValue(iter,threshold):
+    threshold = threshold + np.exp(iter)/(np.exp(iter)+1)#np.log10(i+1)
+    return threshold
+
+def calcDisplacement(S,old_S):
+    displ = S-old_S
+    return displ 
+
+def diffusion(passiv_agents,activ_agents,fitness):
+    found = 0
+    for i in range(0,len(activ_agents)):
+        ran = random.randint(0,149)#
+        for k in range(0,len(activ_agents)):
+            if ran==activ_agents[k]:
+                found = 1
+                break
+        if found==1:
+            found = 0
+            continue
+        else:
+            fitness[ran] = fitness[i]
+             
+    return fitness
+
+def checkAgents(displacement,threshold):
+    passiv = []#np.zeros([N,dim])
+    activ = []#np.zeros([N,dim])
+    
+    #hypothesis here is the fitness value
+    for i in range(0,N):
+        """for k in range(0,len(displacement[0])):
+            if np.greater(threshold,displacement[i][k]):
+                count+=1"""
+        """if count==len(displacement[0]):
+            activ[a]=S[i]
+            a+=1"""
+        if np.greater(threshold,np.average(displacement[i])):
+            activ.append(i)
+        else:
+            passiv.append(i)
+            
+    return passiv,activ
+
 FBest = LBest = best = bestArg = 0.0
 BestChart = np.zeros([MaxIt,1])
 fitness = Evaluate(weight_matrix, S)#fitness.shape--150,1
+old_S = S
+"""Displacement for the first iteration"""
 M = MassCalc(fitness)
+G = Gconstant(0,MaxIt)
+a = GField(G, M, S, 0, MaxIt, 1)
+S, V = move(S, a, V)
+M = MassCalc(fitness)
+
+threshold = 0
+t1=time()
 for i in range(0,MaxIt):
     print("Iteration : %d" % i)
     S = Sbound(S, up, low)
@@ -176,8 +235,18 @@ for i in range(0,MaxIt):
     if best>FBest:
         FBest = best
         LBest = S[bestArg]
+    
+    if i==1:
+        threshold = np.average(old_S)
+    else:
+        threshold = thresholdValue(i,threshold)
+        
+    displacement = calcDisplacement(S,old_S)
+    passive_agents,active_agents = checkAgents(displacement,threshold)
+    fitness = diffusion(passive_agents,active_agents,fitness)
     leastArg = np.argmin(fitness)
     least = np.min(fitness)
+    
     print("Least Fitness Value")
     print(least)
     print("Least Fitness Index")
@@ -191,10 +260,80 @@ for i in range(0,MaxIt):
         S[leastArg] = eigen_local_best
         eigen_faces_lowd[leastArg] = eigen_local_best
         print("Eigen vector replaced")
+    old_S = S
     M = MassCalc(fitness)
     G = Gconstant(i,MaxIt)
     a = GField(G, M, S, i, MaxIt, 1)
     S, V = move(S, a, V)
+t2 = time()
+print("time required:",round(t2-t1,3)," s")
+print("Iterations completed")
+eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
+pca.components_ = eigen_faces_transformed
+X_train_pca = pca.transform(X_train)
+X_test_pca = pca.transform(X_test)
+"""parameters = {'C':[1,2,3,4,5,6,7,8,9,10], 'kernel':('linear', 'rbf','poly'), 'gamma':[0.0000001,0.001,0.00005,0.0001,0.00001]}
+svc = OneVsRestClassifier(svm.SVC(C = 1.0, kernel = 'poly', gamma = 0.1))
+classifier = GridSearchCV(svc, param_grid = parameters)"""
+#classifier = OneVsRestClassifier(svm.SVC(C = 2.0, kernel='poly',gamma = 0.000001, probability=True))
+
+"""param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5], 'kernel':('linear','rbf','poly'),
+              'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }"""
+#clf = GridSearchCV(svm.SVC(kernel='rbf', class_weight='balanced'), param_grid)
+#clf = OneVsRestClassifier(svm.SVC(C = 20,kernel = 'rbf',gamma = 0.00005,probability=True))
+clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=5))
+classifier = clf.fit(X_train_pca, FaceRecognition.y_train)
+train_1 = time()
+classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
+train_2 = time()
+print("Training time for classifier: ",round(train_2-train_1,3)," s")
+pred_1 = time()
+y_pred = classifier.predict(X_test_pca)
+pred_2 = time()
+print("Prediction time for classifier: ",round(pred_2-pred_1,3)," s")
+print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))
+y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(),y_score.ravel())
+roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+mean_tpr = np.zeros_like(all_fpr)
+for i in range(n_classes):
+    mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+mean_tpr /= n_classes
+fpr["macro"] = all_fpr
+tpr["macro"] = mean_tpr
+roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+#roc = 
+plt.figure(1)
+##################
+plt.plot(fpr["micro"], tpr["micro"],
+          label='micro-average ROC curve (area = {0:0.2f})'
+                ''.format(roc_auc["micro"]),
+          color='deeppink', linewidth=2)
+plt.plot(fpr["micro"], tpr["micro"],
+          label='micro-average ROC curve (area = {0:0.2f})'
+                ''.format(roc_auc["micro"]),
+          linewidth=2)
+plt.plot(fpr["macro"], tpr["macro"],
+          label='macro-average ROC curve (area = {0:0.2f})'
+                ''.format(roc_auc["macro"]),
+          color='navy', linewidth=2)
+
+plt.plot(fpr["macro"], tpr["macro"],
+          label='macro-average ROC curve (area = {0:0.2f})'
+                ''.format(roc_auc["macro"]),
+          linewidth=2)
+for i in range(n_classes):
+    plt.plot(fpr[i],tpr[i], label=''
+                                  ''.format(i, roc_auc[i]))
+    
+"""
 print("Iterations completed")
 eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)#simply bringing bk d features
 pca.components_ = eigen_faces_transformed
@@ -210,7 +349,7 @@ print("classifier created")
 y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
 print("score calculated")
 print(y_score)
-"""fpr = dict()
+fpr = dict()
 tpr = dict()
 roc_auc = dict()
 for i in range(n_classes):
@@ -251,14 +390,14 @@ for i in range(n_classes):
 for (i, ind) in enumerate(index):
      plt.plot(fpr[ind], tpr[ind], label='ROC curve of class {0} (area = {1:0.2f})'
                                     ''.format(ind, roc_auc[ind]))
-
+"""
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve on the LFW Dataset for multiple classes')
-plt.legend(loc="lower right")"""
+plt.legend(loc="lower right")
  
  ###################################################
 eigen = plt.figure()

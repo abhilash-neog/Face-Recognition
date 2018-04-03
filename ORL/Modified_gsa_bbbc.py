@@ -49,7 +49,7 @@ V = np.zeros([N,dim])
 S = np.zeros([N,dim])#S is the search space(that is why eigen_faces_lowd was created)
 np.copyto(S,eigen_faces_lowd)#weight_matrix the set of points
 #MaxIt = int(S.shape[0]/3)
-MaxIt = 10
+MaxIt = 50
 print("Maximum Iterations : %d" % MaxIt)
 #limit = max(abs(np.amin(S)), abs(np.amax(S)))
 up = np.amax(S)
@@ -147,7 +147,7 @@ def ChaoticLocalSearch(weight_matrix, centre):
     r = minvalue
     L = np.zeros([dim,dim])
     chaosM = np.zeros([dim,1])
-    rho = 0.9
+    #rho = 0.9
     for i in range(0,dim):
         L[i] = centre
         chaosM[i] = NewChaos()
@@ -204,19 +204,17 @@ def checkAgents(displacement,threshold):
 def diffusion(passiv_agents,activ_agents,fitness):
     found = 0
     for i in range(0,len(activ_agents)):
-        ran = random.randint(0,151)#
-        """for k in range(0,len(activ_agents)):
+        ran = random.randint(0,149)#
+        for k in range(0,len(activ_agents)):
             if ran==activ_agents[k]:
                 found = 1
                 break
         if found==1:
-        	found = 0
-            continue"""
-        if ran in activ_agents:
-        	continue
+            found = 0
+            continue
         else:
             fitness[ran] = fitness[i]
-                
+             
     return fitness
 
 def thresholdValue(iter,threshold):
@@ -288,7 +286,7 @@ eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
 pca.components_ = eigen_faces_transformed
 X_train_pca = pca.transform(X_train)
 X_test_pca = pca.transform(X_test)
-classifier = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True))
+classifier = OneVsRestClassifier(svm.SVC(kernel='linear', gamma = 0.000001, probability=True))
 classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
 y_pred = classifier.predict(X_test_pca)
 print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))

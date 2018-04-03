@@ -50,7 +50,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Compute a PCA (eigenfaces) on the face dataset
 # unsupervised feature extraction / dimensionality reduction
-no_of_components = 150
+no_of_components = 380
 
 print("Extracting the top %d eigenfaces from %d faces"
       % (no_of_components, X_train.shape[0]))
