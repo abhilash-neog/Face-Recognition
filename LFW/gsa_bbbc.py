@@ -51,7 +51,7 @@ dim = eigen_faces_lowd.shape[1]
 V = np.zeros([N,dim])
 S = np.zeros([N,dim])
 np.copyto(S,eigen_faces_lowd)#copies content of src into dst array
-MaxIt = 30#int(S.shape[0]/3)#                                               WHy?????
+MaxIt = 10#int(S.shape[0]/3)#                                               WHy?????
 print("Maximum Iterations : %d" % MaxIt)#50
 #limit = max(abs(np.amin(S)), abs(np.amax(S)))
 up = np.amax(S)#max along an axis flattened
