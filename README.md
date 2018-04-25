@@ -2,7 +2,7 @@
 Hybrid GSA-SDS-BBBC Algorithm using Chaotic Local Search & It's Application to a Face Recognition Scenario
 ------------------------------------------------------------------------------------------------------
 
-**Setup**
+## Setup
 
 **1)Language:** Python 3.6(recommended)
 
@@ -13,7 +13,7 @@ Hybrid GSA-SDS-BBBC Algorithm using Chaotic Local Search & It's Application to a
 **3) Anaconda 4 :** [Download](https://anaconda.org/)
 
 
-**Functions Description:** 
+## Functions Description: 
           
 **(i) CostFun->**  The ojective function used to evaluate data   points
 	inputs : Face Vector Matrix, Data point
@@ -72,6 +72,6 @@ Hybrid GSA-SDS-BBBC Algorithm using Chaotic Local Search & It's Application to a
 	inputs: current search space, old search space(i.e. positions of agents)
 	output: difference in position of agents(i.e. displacement) 
 
-**Working:** 
+## Working: 
 	The code automatically fetches the dataset by connecting to the internet. Number of components is given as 150 (can be changed as per the programmer's wish).Prinicple Component Analysis is done on the dataset and eigen vectors are extracted. Then dimensionality reduction is done on the eigen vectors to match the number of components. This eigen vector matrix is given as the input to the algorithm with the objective function being the sum of it's corresponding weights in each face vector. The dataset would be represented by the transformed eigen vectors. Then it's divided into train and test data and passed on to an SVM classifier. The classification is done and results are noted.
 
