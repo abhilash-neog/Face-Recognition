@@ -4,7 +4,7 @@ Hybrid GSA-SDS-BBBC Algorithm using Chaotic Local Search & It's Application to a
 
 **Setup**
 
-**1)Language: ** Python 3.6(recommended)
+**1)Language:** Python 3.6(recommended)
 
 **2)Libraries required:** numpy, matplotlib, sklearn, scipy
 
