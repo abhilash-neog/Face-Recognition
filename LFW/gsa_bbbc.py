@@ -107,7 +107,7 @@ def move(S,a,V): #why is a matrix required??
     chaos = NewChaos()
     v = np.zeros([V.shape[0], V.shape[1]])
     for i in range(0,V.shape[0]):
-        v[i] = chaos*V[i]#+a[i]
+        v[i] = chaos*V[i]+a[i]
         chaos = 4*chaos*(1-chaos)
         if chaos == 0.0 or chaos == 0.25 or chaos == 0.5 or chaos == 0.75 or chaos == 1.0:
             chaos = NewChaos()
@@ -292,7 +292,8 @@ y_pred = classifier.predict(X_test_pca)
 pred_2 = time()
 print("Prediction time for classifier: ",round(pred_2-pred_1,3)," s")
 print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))
-y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
+#y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
+y_score = classifier.score(X_test_pca, FaceRecognition.y_test)
 fpr = dict()
 tpr = dict()
 roc_auc = dict()
