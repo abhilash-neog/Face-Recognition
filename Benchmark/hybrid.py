@@ -232,87 +232,87 @@ def calcDisplacement(S,old_S):
     displ = S-old_S
     return displ    
 
-"""def main():
-	S, weight_matrix, V, MaxIt, up, low = face_extract()
-	FBest = LBest = best = bestArg = 0.0
-	BestChart = np.zeros([MaxIt,1])
-	fitness = Evaluate(weight_matrix, S)
-	old_S = S
-	#Displacement for the first iteration
-	M = MassCalc(fitness)
-	G = Gconstant(0,MaxIt)
-	a = GField(G, M, S, 0, MaxIt, 1)
-	S, V = move(S, a, V)
-	M = MassCalc(fitness)
+def main():
+    S, weight_matrix, V, MaxIt, up, low = face_extract()
+    FBest = LBest = best = bestArg = 0.0
+    BestChart = np.zeros([MaxIt,1])
+    fitness = Evaluate(weight_matrix, S)
+    old_S = S
+    #Displacement for the first iteration
+    M = MassCalc(fitness)
+    G = Gconstant(0,MaxIt)
+    a = GField(G, M, S, 0, MaxIt, 1)
+    S, V = move(S, a, V)
+    M = MassCalc(fitness)
 
-	for i in range(1,MaxIt):
-        S = Sbound(S, up, low)
-    	fitness = Evaluate(weight_matrix, S)
-    	best = np.max(fitness)
-    	bestArg = np.argmax(fitness)
-    	if i==0:
-        	FBest = best
-        	LBest = S[bestArg]
-    	if best>FBest:
-        	FBest = best
-        	LBest = S[bestArg]    
-   		if i==1:
-        	threshold = np.average(old_S)
-    	else:
-        	threshold = thresholdValue(i,threshold)
+    for i in range(1,MaxIt):
+       S = Sbound(S, up, low)
+       fitness = Evaluate(weight_matrix, S)
+       best = np.max(fitness)
+       bestArg = np.argmax(fitness)
+       if i==0:
+          FBest = best
+          LBest = S[bestArg]
+       if best>FBest:
+          FBest = best
+          LBest = S[bestArg]    
+       if i==1:
+          threshold = np.average(old_S)
+       else:
+          threshold = thresholdValue(i,threshold)
         
-    	displacement = calcDisplacement(S,old_S)
-    	passive_agents,active_agents = checkAgents(displacement,threshold)
-    	fitness = diffusion(passive_agents,active_agents,fitness)
+       displacement = calcDisplacement(S,old_S)
+       passive_agents,active_agents = checkAgents(displacement,threshold)
+       fitness = diffusion(passive_agents,active_agents,fitness)
         
-    	leastArg = np.argmin(fitness)
-        least = np.min(fitness)#finding the least on the updated list
-    	print("Least Fitness Value")
-     	print(least)
-      	print("Least Fitness Index")
-    	print(leastArg)
-    	mass_sum = np.sum(M)
-     	centre_of_mass = (M.transpose().dot(S))/mass_sum
-     	eigen_local_best, chaotic_local_best = ChaoticLocalSearch(weight_matrix,centre_of_mass)
-    	print("Chaotic local best fitness :")
-     	print(chaotic_local_best)
-     	if chaotic_local_best > least:
-        	S[leastArg] = eigen_local_best
-        	eigen_faces_lowd[leastArg] = eigen_local_best
-        	print("Eigen vector replaced")
-    	old_S = S
-     	M = MassCalc(fitness)
-    	G = Gconstant(i,MaxIt)
-    	a = GField(G, M, S, i, MaxIt, 1)
-     	S, V = move(S, a, V)
-	t2 = time()
-	print("time required:",round(t2-t1,3))
-	eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
-	pca.components_ = eigen_faces_transformed
-	X_train_pca = pca.transform(X_train)
-	X_test_pca = pca.transform(X_test)
-	classifier = OneVsRestClassifier(svm.SVC(kernel='linear', gamma = 0.000001, probability=True))
-	classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
-	y_pred = classifier.predict(X_test_pca)
-	print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))
-	y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
-	fpr = dict()
-	tpr = dict()
-	roc_auc = dict()
+       leastArg = np.argmin(fitness)
+       least = np.min(fitness)#finding the least on the updated list
+       print("Least Fitness Value")
+       print(least)
+       print("Least Fitness Index")
+       print(leastArg)
+       mass_sum = np.sum(M)
+       centre_of_mass = (M.transpose().dot(S))/mass_sum
+       eigen_local_best, chaotic_local_best = ChaoticLocalSearch(weight_matrix,centre_of_mass)
+       print("Chaotic local best fitness :")
+       print(chaotic_local_best)
+       if chaotic_local_best > least:
+           S[leastArg] = eigen_local_best
+           eigen_faces_lowd[leastArg] = eigen_local_best
+           print("Eigen vector replaced")
+       old_S = S
+       M = MassCalc(fitness)
+       G = Gconstant(i,MaxIt)
+       a = GField(G, M, S, i, MaxIt, 1)
+       S, V = move(S, a, V)
+       t2 = time()
+       print("time required:",round(t2-t1,3))
+       eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
+       pca.components_ = eigen_faces_transformed
+       X_train_pca = pca.transform(X_train)
+       X_test_pca = pca.transform(X_test)
+       classifier = OneVsRestClassifier(svm.SVC(kernel='linear', gamma = 0.000001, probability=True))
+       classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
+       y_pred = classifier.predict(X_test_pca)
+       print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))
+       y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
+       fpr = dict()
+       tpr = dict()
+       roc_auc = dict()
+       for i in range(n_classes):
+    	   fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+    	   roc_auc[i] = auc(fpr[i], tpr[i])
+	   fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(),y_score.ravel())
+	   roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+	   all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+	   mean_tpr = np.zeros_like(all_fpr)
 	for i in range(n_classes):
-    	fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
-    	roc_auc[i] = auc(fpr[i], tpr[i])
-	fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(),y_score.ravel())
-	roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-	all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
-	mean_tpr = np.zeros_like(all_fpr)
-	for i in range(n_classes):
-    	mean_tpr += interp(all_fpr, fpr[i], tpr[i])
-	mean_tpr /= n_classes
-	fpr["macro"] = all_fpr
-	tpr["macro"] = mean_tpr
-	roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
-	roc = plt.figure(1)
+    	   mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+	   mean_tpr /= n_classes
+	   fpr["macro"] = all_fpr
+	   tpr["macro"] = mean_tpr
+	   roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+	   roc = plt.figure(1)
 # plt.plot(fpr["micro"], tpr["micro"],
 #          label='micro-average ROC curve (area = {0:0.2f})'
 #                ''.format(roc_auc["micro"]),
@@ -331,7 +331,7 @@ def calcDisplacement(S,old_S):
 #                ''.format(roc_auc["macro"]),
 #          linewidth=2)
 	for i in range(n_classes):
-    	plt.plot(fpr[i],tpr[i], label=''
+    	    plt.plot(fpr[i],tpr[i], label=''
                                   ''.format(i, roc_auc[i]))
 
 # for (i, ind) in enumerate(index):
@@ -349,7 +349,7 @@ def calcDisplacement(S,old_S):
 	eigenface_titles = ["eigenface %d" % i for i in range(eigen_faces.shape[0])]
 	plot_gallery(eigen_faces, eigenface_titles, h, w)
 	plt.show()
-"""
+
 if __name__== "__main__":
     main()
 else:
