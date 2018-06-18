@@ -1,6 +1,6 @@
 ## Benchmark Testing
 
-**1)Benchmark testing was done on the CEC 2015 benchmark functions(24) present in the BBOB suite.
+**1)Benchmark testing was done on the CEC 2015 benchmark functions(24) present in the BBOB suite.**
 
 **2)COCO platform was used for the benchmark testing. The instructions for benchmark tesing can be read from [COCO platform](https://github.com/numbbo/coco)**
 
