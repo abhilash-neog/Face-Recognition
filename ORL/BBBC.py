@@ -4,9 +4,12 @@ from sklearn.datasets import fetch_olivetti_faces
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import label_binarize
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import roc_curve, auc
-from scipy import interp
-from sklearn import svm, datasets
+from sklearn.tree import DecisionTreeClassifier
+# =============================================================================
+# from sklearn.metrics import roc_curve, auc
+# from scipy import interp
+from sklearn import svm
+# =============================================================================
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 import FaceRecognition
@@ -85,8 +88,51 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.yticks(())
         
 def bigCrunch(fitness, S):
-    return np.sum(S/fitness)/np.sum(1/fitness)
+    com = np.zeros([1,N])
+    for i in range(0,len(S)):
+        com[:,i] = np.sum(S[i]/fitness[i])/np.sum(1/fitness[i])
+        
+    return com
 
+def ChaoticLocalSearch(weight_matrix, centre):
+    local_best = CostFun(weight_matrix, centre)
+    total_best = local_best
+    eigen_local = centre
+    eigen_total = eigen_local
+    #np.copyto(eigen_local, centre)
+    #np.copyto(eigen_total, eigen_local)
+    for i in range(0,dim):
+        radval = min(abs(centre[:, i]-low), abs(centre[:, i]-up))
+        if(i==0):
+            minvalue = radval
+        if(radval < minvalue):
+            minvalue = radval
+    r = minvalue
+    L = np.zeros([dim,dim])
+    chaosM = np.zeros([dim,1])
+    #rho = 0.9
+    for i in range(0,dim):
+        L[i] = centre
+        chaosM[i] = NewChaos()
+    for num in range(0,25):
+        for i in range(0,dim):
+            L[i][i] += r*(2*chaosM[i]-1)
+            if(CostFun(weight_matrix, L[i]) > local_best):
+                local_best = CostFun(weight_matrix, L[i])
+                eigen_local = L[i]
+            chaosM[i] = 4*chaosM[i]*(1-chaosM[i])
+            L[i] = centre
+        if local_best > total_best:
+            total_best = local_best
+            eigen_total = eigen_local
+    return eigen_total,total_best
+
+def NewChaos():
+    while 1:
+        chaos = np.random.rand()
+        if chaos != 0.0 and chaos != 0.25 and chaos != 0.5 and chaos != 0.75:
+            break
+    return chaos
 
 def bigBang(S,com,up,iter,dev):
     S = com + S*np.random.normal(com,dev)/iter
@@ -94,9 +140,10 @@ def bigBang(S,com,up,iter,dev):
     
 FBest = LBest = best = bestArg = 0.0
 BestChart = np.zeros([MaxIt,1])
-fitness = Evaluate(weight_matrix, S)
+#fitness = Evaluate(weight_matrix, S)
 #M = MassCalc(fitness)
 dev = 1
+
 for i in range(0,MaxIt):
     print("Iteration : %d" % i)
     S = Sbound(S, up, low)
@@ -117,14 +164,14 @@ for i in range(0,MaxIt):
     print(leastArg)
     centre_of_mass = bigCrunch(fitness,S)
     eigen_faces_lowd[leastArg] = centre_of_mass
-    #eigen_local_best, chaotic_local_best = ChaoticLocalSearch(weight_matrix,centre_of_mass)
+    eigen_local_best, chaotic_local_best = ChaoticLocalSearch(weight_matrix,centre_of_mass)
     #print("Chaotic local best fitness :")
     #print(chaotic_local_best)
 # =============================================================================
-#     if chaotic_local_best > least:
-#         S[leastArg] = eigen_local_best
-#         eigen_faces_lowd[leastArg] = eigen_local_best
-#         print("Eigen vector replaced")
+    if chaotic_local_best > least:
+        S[leastArg] = eigen_local_best
+        eigen_faces_lowd[leastArg] = eigen_local_best
+        print("Eigen vector replaced")
 #     M = MassCalc(fitness)
 # =============================================================================
     #G = Gconstant(i,MaxIt)
@@ -143,6 +190,7 @@ X_test_pca = pca.transform(X_test)
 
 classifier = OneVsRestClassifier(svm.SVC(kernel='rbf', probability=True))
 
+#classifier = OneVsRestClassifier(DecisionTreeClassifier(criterion = 'entropy',min_samples_split= 10))
 
 classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
 
@@ -150,7 +198,7 @@ y_pred = classifier.predict(X_test_pca)
 
 print(classification_report(FaceRecognition.y_test, y_pred, target_names=FaceRecognition.target_names))
 
-y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
+#y_score = classifier.evaluate(X_test_pca)
 
 """
 fpr = dict()

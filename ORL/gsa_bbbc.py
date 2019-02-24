@@ -212,6 +212,7 @@ for i in range(0,MaxIt):
     G = Gconstant(i,MaxIt)
     a = GField(G, M, S, i, MaxIt, 1)
     S, V = move(S, a, V)
+    
 eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
 pca.components_ = eigen_faces_transformed
 X_train_pca = pca.transform(X_train)
