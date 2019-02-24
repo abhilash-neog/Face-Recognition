@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Python script for the COCO experimentation module `cocoex`.
-
+the final code!!!!!!!!!!!!!
 Usage from a system shell::
 
     python example_experiment.py bbob
@@ -33,6 +33,7 @@ runs the 2nd of 300 batches with budget 5 * dimension and at most 9 restarts.
 Calling `example_experiment` without parameters prints this
 help and the available suite names.
 """
+#gsa_bbbc ppdata
 from __future__ import absolute_import, division, print_function, unicode_literals
 try: range = xrange
 except NameError: pass
@@ -246,42 +247,60 @@ def random_search(fun, lbounds, ubounds, budget):
 def gsa_solver(fun, lbounds, ubounds, budget):
     #print(fun)
     lbounds, ubounds = np.array(lbounds), np.array(ubounds)
-    dim, x_max, f_max = len(lbounds), (lbounds + ubounds) / 2, None
+    dim, x_min, f_min = len(lbounds), (lbounds + ubounds) / 2, None
     max_chunk_size = 1 + 4e4 / dim
+    #print("Value of chunka and budget\n", max_chunk_size, budget)
     i=0
+    old_X = X
     chunk = int(min([budget, max_chunk_size]))
     V = np.zeros([chunk,dim])
     X = lbounds + (ubounds - lbounds) * np.random.rand(chunk, dim)
-    old_X = X
+    M = md.MassCalc(F)
+    G = md.Gconstant(0,50)
+    F = [fun(x) for x in X]
+    X, V = md.move(old_X, V)
+    
     while budget > 0:
         chunk = int(min([budget, max_chunk_size]))
         # about five times faster than "for k in range(budget):..."
         #X = lbounds + (ubounds - lbounds) * np.random.rand(chunk, dim)
         
-        F = [fun(x) for x in X]
-        M = md.MassCalc(F)
-        G = md.Gconstant(0,50)
+        #F = [fun(x) for x in X]
+        #M = md.MassCalc(F)
+        #G = md.Gconstant(0,50)
         #a = md.GField(G, M, X, 0, 50, 1, chunk, dim)
-        X, V = md.move(X, V)
+        #X, V = md.move(old_X, V)
         if i==0:
-            threshold = np.average(old_X)
+            threshold = abs(np.average(old_X))
             
         threshold = md.thresholdValue(++i,threshold)
         displacement = md.calcDisplacement(X,old_X)
         passive_agents,active_agents = md.checkAgents(displacement,threshold, chunk)
-        F = md.diffusion(passive_agents,active_agents,F)
+        F = md.diffusion(passive_agents,active_agents,F, chunk)
+        leastArg = np.argmin(F)
+        least = np.min(F)
+        best = np.max(F)
+        bestArg = np.argmax(F)
+        mass_sum = np.sum(M)
+        centre_of_mass = (M.transpose().dot(X))/mass_sum
+        #print("lets c the shape\n",lbounds,ubounds)
+        eigen_local_best, chaotic_local_best = md.ChaoticLocalSearch(X,centre_of_mass,dim, lbounds, ubounds)
+        #print("eigen local best\n", chaotic_local_best)
+        if chaotic_local_best > least:
+            X[leastArg] = eigen_local_best
+            F[leastArg] = chaotic_local_best
         if fun.number_of_objectives == 1:
             #index = np.argmin(F)
-            f_max = np.max(F)
-            index = np.argmax(F)
+            f_min = np.min(F)
+            index = np.argmin(F)
             
-            if f_max is None or F[index] > f_max :
-                x_max, f_max = X[index], F[index]
+            if f_min is None or F[index] < f_min :
+                x_min, f_min = X[index], F[index]
 
             
-        old_X = X
+        #old_X = X
         budget -= chunk
-    return x_max
+    return x_min
     
 
 # ===============================================
@@ -396,14 +415,14 @@ def coco_optimize(solver, fun, max_evals, max_runs=1e9):
 suite_name = "bbob"  # always overwritten when called from system shell
                      # see available choices via cocoex.known_suite_names
 budget = 4  # maxfevals = budget x dimension ### INCREASE budget WHEN THE DATA CHAIN IS STABLE ###
-max_runs = 1e3  # number of (almost) independent trials per problem instance
+max_runs = 1e9  # number of (almost) independent trials per problem instance
 number_of_batches = 1  # allows to run everything in several batches
 current_batch = 1      # 1..number_of_batches
 ##############################################################################
 SOLVER = gsa_solver#random_search#sds_gsa_bbbc#
 # SOLVER = my_solver # SOLVER = fmin_slsqp # SOLVER = cma.fmin
 suite_instance = "" # "year:2016"
-suite_options = ""  # "dimensions: 2,3,5,10,20 "  # if 40 is not desired
+suite_options = "dimensions: 2,3,5,10,20 "  # if 40 is not desired
 # for more suite options, see http://numbbo.github.io/coco-doc/C/#suite-parameters
 observer_options = ObserverOptions({  # is (inherited from) a dictionary
                     'algorithm_info': "A SIMPLE RANDOM SEARCH ALGORITHM", # CHANGE/INCOMMENT THIS!

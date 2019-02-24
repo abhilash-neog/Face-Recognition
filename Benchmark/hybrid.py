@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 #import FaceRecognition
 import random
 from time import time
+import math
 
 N = 0
 dim = 0
@@ -138,15 +139,16 @@ def Sbound(S,up,low):
     return S
 
 
-def ChaoticLocalSearch(weight_matrix, centre):
+def ChaoticLocalSearch(weight_matrix, centre, dim, low, up):
     local_best = CostFun(weight_matrix, centre)
     total_best = local_best
     eigen_local = centre
     eigen_total = eigen_local
     #np.copyto(eigen_local, centre)
     #np.copyto(eigen_total, eigen_local)
+    
     for i in range(0,dim):
-        radval = min(abs(centre[:, i]-low), abs(centre[:, i]-up))
+        radval = min(abs(centre[i]-low[i]), abs(up[i]-centre[i]))
         if(i==0):
             minvalue = radval
         if(radval < minvalue):
@@ -201,17 +203,17 @@ def checkAgents(displacement,threshold, N):
         """if count==len(displacement[0]):
             activ[a]=S[i]
             a+=1"""
-        if np.greater(threshold,np.average(displacement[i])):
+        if np.greater(threshold,displacement[i]):
             activ.append(i)
         else:
             passiv.append(i)
             
     return passiv,activ
 
-def diffusion(passiv_agents,activ_agents,fitness):
+def diffusion(passiv_agents,activ_agents,fitness, N):
     found = 0
     for i in range(0,len(activ_agents)):
-        ran = random.randint(0,149)#
+        ran = random.randint(0,N)#inclusive of upper bound
         for k in range(0,len(activ_agents)):
             if ran==activ_agents[k]:
                 found = 1
@@ -220,17 +222,26 @@ def diffusion(passiv_agents,activ_agents,fitness):
             found = 0
             continue
         else:
+            
             fitness[ran] = fitness[i]
              
     return fitness
 
 def thresholdValue(iter,threshold):
-    threshold = threshold + np.log10(iter)
+    threshold = abs(threshold + np.log10(iter+1))
+    #print("threshold is\n", threshold)
     return threshold
 
 def calcDisplacement(S,old_S):
-    displ = S-old_S
-    return displ    
+    disp = np.zeros([len(S)])
+    for i in range(0,len(S)):
+        disp[i] = math.sqrt((S[i][0]-old_S[i][0])**2 + (S[i][1]-old_S[i][1])**2)
+    
+    #print("Displacement shape is\n", disp.shape)
+    print("Displacement is :\n", disp)
+    print("old_s: \n",old_S)
+    print("S: \n",S)
+    return disp    
 
 """def main():
 	S, weight_matrix, V, MaxIt, up, low = face_extract()
