@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import label_binarize
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 # =============================================================================
 # from sklearn.metrics import roc_curve, auc
 # from scipy import interp
@@ -188,8 +189,8 @@ X_train_pca = pca.transform(X_train)
 
 X_test_pca = pca.transform(X_test)
 
-classifier = OneVsRestClassifier(svm.SVC(kernel='rbf', probability=True))
-
+#classifier = OneVsRestClassifier(svm.SVC(kernel='rbf', probability=True))
+classifier = MLPClassifier()
 #classifier = OneVsRestClassifier(DecisionTreeClassifier(criterion = 'entropy',min_samples_split= 10))
 
 classifier = classifier.fit(X_train_pca, FaceRecognition.y_train)
