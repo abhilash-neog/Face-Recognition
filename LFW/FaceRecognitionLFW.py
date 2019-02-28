@@ -46,7 +46,7 @@ print("no of classes: %d" % no_of_classes)
 
 # Split into a training set and a test set using a stratified k fold
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size= 0.1, random_state=42)
+    X, y, test_size= 0.25, random_state=42)
 
 # Compute a PCA (eigenfaces) on the face dataset
 # unsupervised feature extraction / dimensionality reduction

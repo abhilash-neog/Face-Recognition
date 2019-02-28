@@ -272,6 +272,7 @@ for i in range(1,MaxIt):
     print("Chaotic local best fitness :")
     print(chaotic_local_best)
     if chaotic_local_best > least:
+        fitness[leastArg] = chaotic_local_best
         S[leastArg] = eigen_local_best
         eigen_faces_lowd[leastArg] = eigen_local_best
         print("Eigen vector replaced")
