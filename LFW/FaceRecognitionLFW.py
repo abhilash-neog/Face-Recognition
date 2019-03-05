@@ -12,7 +12,7 @@ from sklearn.svm import SVC
 from sklearn.decomposition import PCA
 
 # Load only that data that has min_faces = 40
-faces_db = fetch_lfw_people(min_faces_per_person= 20, resize=0.6)
+faces_db = fetch_lfw_people(min_faces_per_person= 20)
 
 #find out shapes (for plotting)
 no_of_samples, h, w = faces_db.images.shape

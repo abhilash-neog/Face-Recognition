@@ -16,7 +16,7 @@ import random
 #from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 
-faces_db = fetch_lfw_people(min_faces_per_person= 20, resize=0.6)
+faces_db = fetch_lfw_people(min_faces_per_person= 20)
 print("Data Loaded")
 no_of_samples, h, w = faces_db.images.shape
 print("no of samples: %d" % no_of_samples)
@@ -25,8 +25,8 @@ y = faces_db.target
 y = label_binarize(y, classes=[0, 1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
 n_classes = y.shape[1]#21 y.shape[0] returns 1867 the no of rows
 target_names = faces_db.target_names
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-no_of_components = 800
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+no_of_components = 400
 print("Extracting the top %d eigenfaces from %d faces" % (no_of_components, X_train.shape[0]))
 pca = PCA(n_components=no_of_components,svd_solver='randomized', whiten=True).fit(X_train)#n_components == min(n_samples, n_features)
 eigen_faces = pca.components_ 
