@@ -11,8 +11,8 @@
 **5)DIR:Improvement_comparison - contains result of comparison of the performance of 'with cls' and 'without cls' code(by testing on the 
 becnhmarks)**
 
-**6)*****testing.py*** - **the benchmark testing code on the hybrid developed**
+**6)** ***testing.py*** - **the benchmark testing code on the hybrid developed**
 
-**7)*****hybrid.py*** - **contains the hybrid algorithm which is used by** ***testing.py*** **for the benchmark testing**
+**7)** ***hybrid.py*** - **contains the hybrid algorithm which is used by** ***testing.py*** **for the benchmark testing**
 
 **The benchmark tesing of the algorithm is compared with standard algorithms- GA, DASA, PSO, Rosenbrock, ALPS. [Download](http://coco.gforge.inria.fr/doku.php?id=algorithms-bbob)**
