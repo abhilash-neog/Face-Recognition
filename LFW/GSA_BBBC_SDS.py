@@ -26,7 +26,7 @@ y = faces_db.target
 n_classes = max(y)#21 y.shape[0] returns 1867 the no of rows
 target_names = faces_db.target_names
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-no_of_components = 800
+no_of_components = 500
 print("Extracting the top %d eigenfaces from %d faces" % (no_of_components, X_train.shape[0]))
 pca = PCA(n_components=no_of_components,svd_solver='randomized', whiten=True).fit(X_train)#n_components == min(n_samples, n_features)
 eigen_faces = pca.components_ 
@@ -35,6 +35,7 @@ no_eigen_faces,no_features = eigen_faces.shape#150,1850
 eigen_faces_lowd = pca.transform(eigen_faces)#dimensionality reduction applied
 #eigen_faces_lowd = eigen_faces.dot(eigen_faces.transpose())
 weight_matrix = pca.transform(X_train)
+w_matrix = pca.transform(X_test)
 #weight_matrix = X_train.dot(eigen_faces.transpose())
 print(eigen_faces.shape)
 print(eigen_faces_lowd.shape)#150 dimension and 150 number of eigen faces
@@ -270,29 +271,39 @@ np.save('eigen_modified', eigen_faces_lowd)
 t2 = time()
 print("time required:",round(t2-t1,3)," s")
 print("Iterations completed")
-eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
-pca.components_ = eigen_faces_transformed
-X_train_pca = pca.transform(X_train)
-X_test_pca = pca.transform(X_test)
-"""parameters = {'C':[1,2,3,4,5,6,7,8,9,10], 'kernel':('linear', 'rbf','poly'), 'gamma':[0.0000001,0.001,0.00005,0.0001,0.00001]}
-svc = OneVsRestClassifier(svm.SVC(C = 1.0, kernel = 'poly', gamma = 0.1))
-classifier = GridSearchCV(svc, param_grid = parameters)"""
-#classifier = OneVsRestClassifier(svm.SVC(C = 2.0, kernel='poly',gamma = 0.000001, probability=True))
 
-"""param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5], 'kernel':('linear','rbf','poly'),
-              'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }"""
-#clf = GridSearchCV(svm.SVC(kernel='rbf', class_weight='balanced'), param_grid)
-#clf = OneVsRestClassifier(svm.SVC(C = 20,kernel = 'rbf',gamma = 0.00005,probability=True))
+#eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
+#pca.components_ = eigen_faces_transformed
+#X_train_pca = pca.transform(X_train)
+#X_test_pca = pca.transform(X_test)
+
+eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
+#data_original = np.dot(data_reduced, pca.components_) + pca.mean_
+pca.components_ = eigen_faces_transformed
+
+#X_train_pca = pca.transform(X_train)
+
+X_train_pca = np.dot(weight_matrix,pca.components_) + pca.mean_
+X_test_pca = np.dot(w_matrix,pca.components_) + pca.mean_
+
 clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=7))
+
 classifier = clf.fit(X_train_pca, y_train)
+
 train_1 = time()
+
 classifier = classifier.fit(X_train_pca, y_train)
+
 train_2 = time()
+
 print("Training time for classifier: ",round(train_2-train_1,3)," s")
+
 pred_1 = time()
 y_pred = classifier.predict(X_test_pca)
 pred_2 = time()
+
 print("Prediction time for classifier: ",round(pred_2-pred_1,3)," s")
+
 print(classification_report(y_test, y_pred, target_names=FaceRecognitionLFW.target_names))
 #y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
 y_score = classifier.score(X_test_pca, y_test)
