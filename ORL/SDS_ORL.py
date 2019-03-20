@@ -9,14 +9,15 @@ import numpy as np                                         #27,67
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_olivetti_faces
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import label_binarize
+#from sklearn.preprocessing import label_binarize
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import roc_curve, auc
-from scipy import interp
-from sklearn import svm, datasets
+#from sklearn.metrics import roc_curve, auc
+#from scipy import interp
+from sklearn import svm
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from time import time
+from sklearn.neighbors import KNeighborsClassifier
 
 faces_db = fetch_olivetti_faces()
 print("Data Loaded")
@@ -24,6 +25,11 @@ no_of_samples, h, w = faces_db.images.shape
 print("no of samples: %d" % no_of_samples)
 X = faces_db.data
 y = faces_db.target
+
+classes = np.unique(y)
+classes = ["%d" % number for number in classes]
+classes = np.array(classes)
+target_names = classes
 #y = label_binarize(y, classes=[0, 1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39])
 n_classes = max(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
@@ -35,6 +41,7 @@ no_eigen_faces,no_features = eigen_faces.shape# isn't both the same????
 eigen_faces_lowd = pca.transform(eigen_faces)
 #eigen_faces_lowd = eigen_faces.dot(eigen_faces.transpose())
 weight_matrix = pca.transform(X_train)
+w_matrix = pca.transform(X_test)
 #weight_matrix = X_train.dot(eigen_faces.transpose())
 print(eigen_faces.shape)
 print(eigen_faces_lowd.shape)
@@ -54,7 +61,7 @@ V = np.zeros([N,dim])
 S = np.zeros([N,dim])#S is the search space(that is why eigen_faces_lowd was created)
 np.copyto(S,eigen_faces_lowd)#weight_matrix the set of points
 #MaxIt = int(S.shape[0]/3)
-MaxIt = 50
+MaxIt = 100
 print("Maximum Iterations : %d" % MaxIt)
 #limit = max(abs(np.amin(S)), abs(np.amax(S)))
 up = np.amax(S)
@@ -97,7 +104,7 @@ def calcDisplacement(S,old_S):
     displ = S-old_S
     return displ 
 
-def diffusion(passiv_agents,activ_agents,fitness):
+def diffusion(passiv_agents,activ_agents,fitness, S, eigen_faces_lowd):
     found = 0
     for i in range(0,len(activ_agents)):
         ran = random.randint(0,149)#
@@ -110,8 +117,10 @@ def diffusion(passiv_agents,activ_agents,fitness):
             continue
         else:
             fitness[ran] = fitness[i]
+            S[ran] = S[i]#check this
+            eigen_faces_lowd[ran] = eigen_faces_lowd[i]
              
-    return fitness
+    return S,eigen_faces_lowd, fitness
 
 def checkAgents(displacement,threshold):
     passiv = []#np.zeros([N,dim])
@@ -159,45 +168,45 @@ for i in range(0,MaxIt):
         
     displacement = calcDisplacement(S,old_S)
     passive_agents,active_agents = checkAgents(displacement,threshold)
-    fitness = diffusion(passive_agents,active_agents,fitness)
-    leastArg = np.argmin(fitness)
-    least = np.min(fitness)
-    
-    print("Least Fitness Value")
-    print(least)
-    print("Least Fitness Index")
-    print(leastArg)
-    
+    S, eigen_faces_lowd, fitness = diffusion(passive_agents,active_agents,fitness, S, eigen_faces_lowd)
     
     
 t2 = time()
 print("time required:",round(t2-t1,3)," s")
 print("Iterations completed")
+
 eigen_faces_transformed = pca.inverse_transform(eigen_faces_lowd)
 pca.components_ = eigen_faces_transformed
+# =============================================================================
+# 
 X_train_pca = pca.transform(X_train)
 X_test_pca = pca.transform(X_test)
+# 
+# =============================================================================
+#X_train_pca = np.dot(weight_matrix, pca.components_) + pca.mean_
+#X_test_pca = np.dot(w_matrix, pca.components_) + pca.mean_
+
 """parameters = {'C':[1,2,3,4,5,6,7,8,9,10], 'kernel':('linear', 'rbf','poly'), 'gamma':[0.0000001,0.001,0.00005,0.0001,0.00001]}
 svc = OneVsRestClassifier(svm.SVC(C = 1.0, kernel = 'poly', gamma = 0.1))
 classifier = GridSearchCV(svc, param_grid = parameters)"""
-#classifier = OneVsRestClassifier(svm.SVC(C = 2.0, kernel='poly',gamma = 0.000001, probability=True))
+clf = OneVsRestClassifier(svm.SVC(C = 1.0, kernel='rbf',gamma = 0.001, probability=True))
 
 """param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5], 'kernel':('linear','rbf','poly'),
               'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }"""
 #clf = GridSearchCV(svm.SVC(kernel='rbf', class_weight='balanced'), param_grid)
 #clf = OneVsRestClassifier(svm.SVC(C = 20,kernel = 'rbf',gamma = 0.00005,probability=True))
-clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=7))
-classifier = clf.fit(X_train_pca, FaceRecognitionLFW.y_train)
+#clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=7))
+classifier = clf.fit(X_train_pca, y_train)
 train_1 = time()
-classifier = classifier.fit(X_train_pca, FaceRecognitionLFW.y_train)
+classifier = classifier.fit(X_train_pca, y_train)
 train_2 = time()
 print("Training time for classifier: ",round(train_2-train_1,3)," s")
 pred_1 = time()
 y_pred = classifier.predict(X_test_pca)
 pred_2 = time()
 print("Prediction time for classifier: ",round(pred_2-pred_1,3)," s")
-print(classification_report(FaceRecognitionLFW.y_test, y_pred, target_names=FaceRecognitionLFW.target_names))
+print(classification_report(y_test, y_pred, target_names = target_names))
 #y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
-y_score = classifier.score(X_test_pca, FaceRecognitionLFW.y_test)
+y_score = classifier.score(X_test_pca, y_test)
 
 
