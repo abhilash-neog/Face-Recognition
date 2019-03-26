@@ -28,14 +28,18 @@ target_names = faces_db.target_names
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 no_of_components = 500
 print("Extracting the top %d eigenfaces from %d faces" % (no_of_components, X_train.shape[0]))
+
 pca = PCA(n_components=no_of_components,svd_solver='randomized', whiten=True).fit(X_train)#n_components == min(n_samples, n_features)
 eigen_faces = pca.components_ 
+
 print(sum(pca.explained_variance_ratio_))
 no_eigen_faces,no_features = eigen_faces.shape#150,1850
 eigen_faces_lowd = pca.transform(eigen_faces)#dimensionality reduction applied
 #eigen_faces_lowd = eigen_faces.dot(eigen_faces.transpose())
+
 weight_matrix = pca.transform(X_train)
 w_matrix = pca.transform(X_test)
+
 #weight_matrix = X_train.dot(eigen_faces.transpose())
 print(eigen_faces.shape)
 print(eigen_faces_lowd.shape)#150 dimension and 150 number of eigen faces
@@ -288,25 +292,25 @@ X_test_pca = np.dot(w_matrix,pca.components_) + pca.mean_
 
 clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=7))
 
-classifier = clf.fit(X_train_pca, y_train)
+#classifier = clf.fit(X_train_pca, y_train)
 
 train_1 = time()
 
-classifier = classifier.fit(X_train_pca, y_train)
+clf.fit(X_train_pca, y_train)
 
 train_2 = time()
 
 print("Training time for classifier: ",round(train_2-train_1,3)," s")
 
 pred_1 = time()
-y_pred = classifier.predict(X_test_pca)
+y_pred = clf.predict(X_test_pca)
 pred_2 = time()
 
 print("Prediction time for classifier: ",round(pred_2-pred_1,3)," s")
 
 print(classification_report(y_test, y_pred, target_names=FaceRecognitionLFW.target_names))
 #y_score = classifier.fit(X_train_pca, y_train).decision_function(X_test_pca)
-y_score = classifier.score(X_test_pca, y_test)
+y_score = clf.score(X_test_pca, y_test)
 """
     
 print("Iterations completed")
